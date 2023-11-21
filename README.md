@@ -22,5 +22,3 @@ CVX Tool for Matlab2020b
 ## The DRL model implementation 
 
 The implementation is in `DRL/model_train.py`
-
-Optimal AO(located in `DRL/function_alldef gen_epsilon_rule_exation`): Exhaust all possible cache layouts and searched for the optimal solution.
