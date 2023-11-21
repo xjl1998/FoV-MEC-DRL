@@ -23,4 +23,4 @@ CVX Tool for Matlab2020b
 
 The implementation is in `DRL/model_train.py`
 
-In Optimal AO(located in 'DRL/function_all/"def gen_epsilon_rule_exation'), we exhausted all possible cache layouts and searched for the optimal solution.
+Optimal AO(located in 'DRL/function_all/"def gen_epsilon_rule_exation'): Exhaust all possible cache layouts and searched for the optimal solution.
