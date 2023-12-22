@@ -12,7 +12,6 @@ function [result,status] = cvx_optimization_SDR(BW,epsilon,NumberOfFov,NumberOfB
         expression sum_P(NumberOfBS);
   
 
-        %计算速率相关的约束
                     for  f = 1:NumberOfFov
                     sum_down(f)=  sum_down(f)+ N_0;
                     for  b = 1:NumberOfBS

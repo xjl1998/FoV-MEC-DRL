@@ -9,7 +9,6 @@ function [result,result1,result2,status] = cvx_optimization_RIS(BW,old_u,unit_nu
         expression sum_down(NumberOfFov);
         expression p;
         expression sum_P(NumberOfBS);
-        %计算速率相关的约束
             for  f = 1:NumberOfFov
                     sum_down(f)= N_0;
                     for  b = 1:NumberOfBS

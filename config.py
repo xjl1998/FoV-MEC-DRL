@@ -1,22 +1,5 @@
 import  argparse
 parser = argparse.ArgumentParser()
-
-total_path =  ['hit_stopwords.txt','cn_stopwords.txt','scu_stopwords.txt','baidu_stopwords.txt']
-# 数据地址
-parser.add_argument(
-    '--data_dir', type=str, default=r'D:\我的项目\ProblemAboutCaching\RNN\tfRecords',
-    help='Directory for storing input data')
-# 模型保存地址
-# 读取的模型路径
-parser.add_argument(
-    '--model_dir', type=str, default=r"D:\我的项目\ProblemAboutCaching\RNN\savedModels",
-    help='model_dir')
-parser.add_argument(
-    '--predict_dir', type=str, default=r'D:\我的项目\ProblemAboutCaching\RNN\predict',
-    help='predict path')
-parser.add_argument(
-    '--hiddenLayerUnits', type=int, default=32,
-    help='categories')
 parser.add_argument(
     '--inputSize', type=int, default=1,
     help='inputSize')
@@ -121,7 +104,6 @@ parser.add_argument(
 # ue_irs_a = 2.5
 # irs_bs_a = 2.5
 # gfu_bs_a = 3.5#2.5
-# #CPU的处理频率
 # F_VR = 3 * 10**9
 # F_MEC = 10 * 10**9
 
