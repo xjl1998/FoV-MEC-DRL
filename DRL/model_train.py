@@ -1619,7 +1619,7 @@ def plot_simulation_results_AO_algorithm(x_labelName,y_labelName,label_lst,disp_
         # plt.show()
         plt.close()
 
-def simulation(total_episode,detect_times,ue_num,bs_num,unit_num,antenna_num,target_r_min,mec_p_max,transmit_p_max,bw=100,r_min=5,test_mode=False,open_matlab=False,prioritized=False,improved_strategy=True,concern_all=False,double_q=True,mec_rule="default",test_step=60,load_H_path= None,model_free=False):
+def simulation(total_episode,detect_times,ue_num,bs_num,unit_num,antenna_num,target_r_min,mec_p_max,transmit_p_max,bw=100,r_min=5,test_mode=False,open_matlab=False,prioritized=False,improved_strategy=True,concern_all=False,double_q=True,mec_rule="default",test_step=60,load_H_path= None):
     # 用来控制什么时候学习
     step = 1
     result = []
@@ -1651,9 +1651,7 @@ def simulation(total_episode,detect_times,ue_num,bs_num,unit_num,antenna_num,tar
     else:
         head = head +'DQN'
         head2 = head2 + 'DQN'
-    if(model_free):
-        head = head +'_model_free'
-        head2 = head2 + '_model_free'
+
 
     model_path= os.path.join('..\DRL', 'simulation_result', 'full',
                               'model%s.ckpt'%head2)
@@ -1675,38 +1673,6 @@ def simulation(total_episode,detect_times,ue_num,bs_num,unit_num,antenna_num,tar
     for table in scene.action_table:
         action_nums.append(len(table))
     if(test_mode==False):
-        if(model_free):
-            fov_agents = DqnAgent(n_actions=action_nums, n_features=len(scene.states),
-                                  agent_num=int(scene.fov_patch_num),
-                                  learning_rate=FLAGS.dqn_lrc, reward_decay=0.9, e_greedy=0.9,
-                                  batch_size=FLAGS.batch_size, replace_target_iter=FLAGS.replace_target_iter,
-                                  # 每 200 步替换一次 target_net 的参数
-                                  memory_size=FLAGS.memory_size,  # 记忆上限
-                                  e_greedy_increment=FLAGS.e_greedy_increment_c, output_graph=False,
-                                  # 是否输出 tensorboard 文件
-                                  name_str='dqn', double_q=double_q,
-                                  prioritized_replay=prioritized)
-            omega_real_agent = DqnAgent(n_actions=10000, n_features=len(scene.states),
-                                  agent_num=1,
-                                  learning_rate=FLAGS.dqn_lrc, reward_decay=0.9, e_greedy=0.9,
-                                  batch_size=FLAGS.batch_size, replace_target_iter=FLAGS.replace_target_iter,
-                                  # 每 200 步替换一次 target_net 的参数
-                                  memory_size=FLAGS.memory_size,  # 记忆上限
-                                  e_greedy_increment=FLAGS.e_greedy_increment_c, output_graph=False,
-                                  # 是否输出 tensorboard 文件
-                                  name_str='dqn', double_q=double_q,
-                                  prioritized_replay=prioritized)
-            omega_imag_agent = DqnAgent(n_actions=10000, n_features=len(scene.states),
-                                        agent_num=1,
-                                        learning_rate=FLAGS.dqn_lrc, reward_decay=0.9, e_greedy=0.9,
-                                        batch_size=FLAGS.batch_size, replace_target_iter=FLAGS.replace_target_iter,
-                                        # 每 200 步替换一次 target_net 的参数
-                                        memory_size=FLAGS.memory_size,  # 记忆上限
-                                        e_greedy_increment=FLAGS.e_greedy_increment_c, output_graph=False,
-                                        # 是否输出 tensorboard 文件
-                                        name_str='dqn', double_q=double_q,
-                                        prioritized_replay=prioritized)
-        else:
             fov_agents = DqnAgent(n_actions=action_nums, n_features=len(scene.states),
                                   agent_num=int(scene.fov_patch_num),
                                   learning_rate=FLAGS.dqn_lrc, reward_decay=0.9, e_greedy=0.9,
@@ -1753,196 +1719,111 @@ def simulation(total_episode,detect_times,ue_num,bs_num,unit_num,antenna_num,tar
             observation = scene.reset()
             T_old = 0
             T_fov_deployment_num = 0
-            if(model_free==False):
-                for detect in range(detect_times):
-                    action_c_reflect = []
-                    if (improved_strategy):
-                        chosen_actions = fov_agents.choose_action(character,observation,scene.fov_patch_num,scene.epsilon)
-                    else:
-                        chosen_actions = fov_agents.choose_action_base( observation, scene.fov_patch_num,
-                                                                  scene.epsilon)
 
-                    for i in range(scene.irs_units_num):
-                        action_c_reflect_i = 1
-                        if action_c_reflect_i == 1:
-                            action_c_reflect_i = np.pi
-                        action_c_reflect.append(action_c_reflect_i)
+            for detect in range(detect_times):
+                action_c_reflect = []
+                if (improved_strategy):
+                    chosen_actions = fov_agents.choose_action(character, observation, scene.fov_patch_num,
+                                                              scene.epsilon)
+                else:
+                    chosen_actions = fov_agents.choose_action_base(observation, scene.fov_patch_num,
+                                                                   scene.epsilon)
+                chosen_action_real = omega_real_agent.choose_action(0, observation, scene.fov_patch_num,
+                                                                    scene.epsilon)
+                chosen_action_imag = omega_imag_agent.choose_action(0, observation, scene.fov_patch_num,
+                                                                    scene.epsilon)
+                for i in range(scene.irs_units_num):
+                    action_c_reflect_i = 1
+                    if action_c_reflect_i == 1:
+                        action_c_reflect_i = np.pi
+                    action_c_reflect.append(action_c_reflect_i)
 
-                    scene.reflect = reflect_calculate(action_c_reflect, np.ones((scene.irs_units_num)), scene.irs_units_num)
+                scene.reflect = reflect_calculate(action_c_reflect, np.ones((scene.irs_units_num)),
+                                                  scene.irs_units_num)
 
-                    # print("chosen action",chosen_actions)
-                    epsilon = gen_epsilon(scene.bs_num, scene.fov_patch_num, chosen_actions, scene.action_table)
-                    current_reward, observation_,epsilon = scene.step(chosen_actions,detect,concern_all)
+                # print("chosen action",chosen_actions)
+                current_reward, observation_, epsilon = scene.step(chosen_actions, chosen_action_real,
+                                                                   chosen_action_imag, detect)
 
+                # savePathG = r'.\dataG.mat'
+                # savePathE = r'.\epsilon.mat'
+                # reward = current_reward-last_reward
+                # # G= np.array(G).reshape([scene.cue,scene.ch_k]).tolist()
+                # last_reward=current_reward
+                # scio.savemat(savePathG, {'G': scene.G2.tolist()})
+                # scio.savemat(savePathE, {'Epsilon': epsilon.tolist()})
 
-                    # savePathG = r'.\dataG.mat'
-                    # savePathE = r'.\epsilon.mat'
-                    # reward = current_reward-last_reward
-                    # # G= np.array(G).reshape([scene.cue,scene.ch_k]).tolist()
-                    # last_reward=current_reward
-                    # scio.savemat(savePathG, {'G': scene.G2.tolist()})
-                    # scio.savemat(savePathE, {'Epsilon': epsilon.tolist()})
-                    T_fov_deployment_num += np.sum(epsilon)
-                    T_old += current_reward
-                    if(test_mode == True and open_matlab==True):
-                        print("bs:%d,ue:%d,antenna:%d,unit:%d,mec_rule:%s step:[%d|%d]"%(bs_num,ue_num,antenna_num,unit_num,mec_rule,len(scene.total_power_record),test_step))
-                        if (len(scene.total_power_record)>=test_step):
-                                np.save('.\simulation_result\\full\\ue_avg_rates_record' + head, np.array(scene.ue_avg_rates_record))
-                                np.save('.\simulation_result\\full\\ue_avg_rates_record_NoRIS' + head, np.array(scene.ue_avg_rates_record_NoRIS))
-                                np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP' + head, np.array(scene.ue_avg_rates_record_noCoMP))
-                                np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP_NoRIS' + head,  np.array(scene.ue_avg_rates_record_noCoMP_NoRIS))
-                                np.save('.\simulation_result\\full\\total_power_record'+head,np.array(scene.total_power_record))
-                                np.save('.\simulation_result\\full\\total_power_record' + head, np.array(scene.total_power_record))
-                                np.save('.\simulation_result\\full\\total_power_record'+head,np.array(scene.total_power_record))
-                                np.save('.\simulation_result\\full\\bs_power_record'+head,np.array(scene.bs_power_record))
-                                np.save('.\simulation_result\\full\\total_power_record_NoRIS' + head, np.array(scene.total_power_record_NoRIS))
-                                np.save('.\simulation_result\\full\\bs_power_record_NoRIS' + head, np.array(scene.bs_power_record_NoRIS))
-                                np.save('.\simulation_result\\full\\total_init_power_record' + head, np.array(scene.total_init_power_record))
-                                np.save('.\simulation_result\\full\\init_bs_power_record'+head,np.array(scene.init_bs_power_record))
-                                # np.save('.\simulation_result\\full\\opt_G_record' + head, np.array(scene.opt_G_record))
-                                print("记录结束")
-                                return
-
-                    # print('第%depisode的第%d次结果为：%f' % (episode,detect, current_reward))
-                    else:
-                        for i in range(scene.ue_num):
-                            fov_agents.store_transition(i, observation, chosen_actions[i], current_reward,
-                                                       observation_)
-
-                        sample_index = []
-                        if(improved_strategy):
-                            if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
-                                # sample_index = ddpg_p.learn(sample_index)
-                                # for i in range(scene.bs_num):
-                                sample_index = fov_agents.learn(character,sample_index)
-                                # var_ramp *= 0.9996
-                                # var_p *= 0.9996
-                        else:
-                            if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
-                                for i in range(scene.bs_num):
-                                    sample_index = fov_agents.learn(i, sample_index)
-                    observation = observation_
-                    step += 1  # 总步数
-                avg_r=T_old/detect_times
-                avg_ep_count = T_fov_deployment_num/detect_times
-                if(avg_r>=best_avg_r):
-                    best_avg_r = avg_r
-                    best_ep  =avg_ep_count
-                    if(episode>200):
-                       fov_agents.save_model(head)
-                info ='Cha:%d BS:%d, UE:%d, Antenna:%d,Unit:%d, p:%f,Epoch[%d|%d] r:%f best_r:%f ep: %f' % (character,bs_num,ue_num,antenna_num,unit_num,fov_agents.epsilons[character],episode,total_episode, avg_r,best_avg_r,best_ep)
-                tqdm_loader.set_description_str(info)
-                # ax.append(episode)
-                # ay.append(avg_r)
-                # plt.clf()
-                # plt.plot(ax, ay)
-                # plt.pause(0.1)
-
-                result.append(T_old / detect_times)
-            else:
-                for detect in range(detect_times):
-                    action_c_reflect = []
-                    if (improved_strategy):
-                        chosen_actions = fov_agents.choose_action(character, observation, scene.fov_patch_num,
-                                                                  scene.epsilon)
-                    else:
-                        chosen_actions = fov_agents.choose_action_base(observation, scene.fov_patch_num,
-                                                                       scene.epsilon)
-                    chosen_action_real = omega_real_agent.choose_action(0, observation, scene.fov_patch_num,
-                                                                            scene.epsilon)
-                    chosen_action_imag = omega_imag_agent.choose_action(0, observation, scene.fov_patch_num,
-                                                                            scene.epsilon)
-                    for i in range(scene.irs_units_num):
-                        action_c_reflect_i = 1
-                        if action_c_reflect_i == 1:
-                            action_c_reflect_i = np.pi
-                        action_c_reflect.append(action_c_reflect_i)
-
-                    scene.reflect = reflect_calculate(action_c_reflect, np.ones((scene.irs_units_num)),
-                                                      scene.irs_units_num)
-
-                    # print("chosen action",chosen_actions)
-                    current_reward, observation_, epsilon = scene.step(chosen_actions,chosen_action_real,chosen_action_imag, detect)
-
-                    # savePathG = r'.\dataG.mat'
-                    # savePathE = r'.\epsilon.mat'
-                    # reward = current_reward-last_reward
-                    # # G= np.array(G).reshape([scene.cue,scene.ch_k]).tolist()
-                    # last_reward=current_reward
-                    # scio.savemat(savePathG, {'G': scene.G2.tolist()})
-                    # scio.savemat(savePathE, {'Epsilon': epsilon.tolist()})
-
-                    T_old += current_reward
-                    if (test_mode == True and open_matlab == True):
-                        print("bs:%d,ue:%d,antenna:%d,unit:%d,mec_rule:%s step:[%d|%d]" % (
+                T_old += current_reward
+                if (test_mode == True and open_matlab == True):
+                    print("bs:%d,ue:%d,antenna:%d,unit:%d,mec_rule:%s step:[%d|%d]" % (
                         bs_num, ue_num, antenna_num, unit_num, mec_rule, len(scene.total_power_record), test_step))
-                        if (len(scene.total_power_record) >= test_step):
-                            np.save('.\simulation_result\\full\\ue_avg_rates_record' + head,
-                                    np.array(scene.ue_avg_rates_record))
-                            np.save('.\simulation_result\\full\\ue_avg_rates_record_NoRIS' + head,
-                                    np.array(scene.ue_avg_rates_record_NoRIS))
-                            np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP' + head,
-                                    np.array(scene.ue_avg_rates_record_noCoMP))
-                            np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP_NoRIS' + head,
-                                    np.array(scene.ue_avg_rates_record_noCoMP_NoRIS))
-                            np.save('.\simulation_result\\full\\total_power_record' + head,
-                                    np.array(scene.total_power_record))
-                            np.save('.\simulation_result\\full\\total_power_record' + head,
-                                    np.array(scene.total_power_record))
-                            np.save('.\simulation_result\\full\\total_power_record' + head,
-                                    np.array(scene.total_power_record))
-                            np.save('.\simulation_result\\full\\bs_power_record' + head,
-                                    np.array(scene.bs_power_record))
-                            np.save('.\simulation_result\\full\\total_power_record_NoRIS' + head,
-                                    np.array(scene.total_power_record_NoRIS))
-                            np.save('.\simulation_result\\full\\bs_power_record_NoRIS' + head,
-                                    np.array(scene.bs_power_record_NoRIS))
-                            np.save('.\simulation_result\\full\\total_init_power_record' + head,
-                                    np.array(scene.total_init_power_record))
-                            np.save('.\simulation_result\\full\\init_bs_power_record' + head,
-                                    np.array(scene.init_bs_power_record))
-                            # np.save('.\simulation_result\\full\\opt_G_record' + head, np.array(scene.opt_G_record))
-                            print("记录结束")
-                            return
+                    if (len(scene.total_power_record) >= test_step):
+                        np.save('.\simulation_result\\full\\ue_avg_rates_record' + head,
+                                np.array(scene.ue_avg_rates_record))
+                        np.save('.\simulation_result\\full\\ue_avg_rates_record_NoRIS' + head,
+                                np.array(scene.ue_avg_rates_record_NoRIS))
+                        np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP' + head,
+                                np.array(scene.ue_avg_rates_record_noCoMP))
+                        np.save('.\simulation_result\\full\\ue_avg_rates_record_noCoMP_NoRIS' + head,
+                                np.array(scene.ue_avg_rates_record_noCoMP_NoRIS))
+                        np.save('.\simulation_result\\full\\total_power_record' + head,
+                                np.array(scene.total_power_record))
+                        np.save('.\simulation_result\\full\\total_power_record' + head,
+                                np.array(scene.total_power_record))
+                        np.save('.\simulation_result\\full\\total_power_record' + head,
+                                np.array(scene.total_power_record))
+                        np.save('.\simulation_result\\full\\bs_power_record' + head,
+                                np.array(scene.bs_power_record))
+                        np.save('.\simulation_result\\full\\total_power_record_NoRIS' + head,
+                                np.array(scene.total_power_record_NoRIS))
+                        np.save('.\simulation_result\\full\\bs_power_record_NoRIS' + head,
+                                np.array(scene.bs_power_record_NoRIS))
+                        np.save('.\simulation_result\\full\\total_init_power_record' + head,
+                                np.array(scene.total_init_power_record))
+                        np.save('.\simulation_result\\full\\init_bs_power_record' + head,
+                                np.array(scene.init_bs_power_record))
+                        # np.save('.\simulation_result\\full\\opt_G_record' + head, np.array(scene.opt_G_record))
+                        print("记录结束")
+                        return
 
-                    # print('第%depisode的第%d次结果为：%f' % (episode,detect, current_reward))
+                # print('第%depisode的第%d次结果为：%f' % (episode,detect, current_reward))
+                else:
+                    for i in range(scene.ue_num):
+                        fov_agents.store_transition(i, observation, chosen_actions[i], current_reward,
+                                                    observation_)
+
+                    sample_index = []
+                    if (improved_strategy):
+                        if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
+                            # sample_index = ddpg_p.learn(sample_index)
+                            # for i in range(scene.bs_num):
+                            sample_index = fov_agents.learn(character, sample_index)
+                            # var_ramp *= 0.9996
+                            # var_p *= 0.9996
                     else:
-                        for i in range(scene.ue_num):
-                            fov_agents.store_transition(i, observation, chosen_actions[i], current_reward,
-                                                        observation_)
-
-                        sample_index = []
-                        if (improved_strategy):
-                            if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
-                                # sample_index = ddpg_p.learn(sample_index)
-                                # for i in range(scene.bs_num):
-                                sample_index = fov_agents.learn(character, sample_index)
-                                # var_ramp *= 0.9996
-                                # var_p *= 0.9996
-                        else:
-                            if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
-                                for i in range(scene.bs_num):
-                                    sample_index = fov_agents.learn(i, sample_index)
-                    observation = observation_
-                    step += 1  # 总步数
-                avg_r = T_old / detect_times
-                if (avg_r >= best_avg_r):
-                    best_avg_r = avg_r
-                    if (episode > 200):
-                        fov_agents.save_model(head)
-                info = 'Cha:%d BS:%d, UE:%d, Antenna:%d,Unit:%d, p:%f,Epoch[%d|%d] r:%f best_r:%f' % (
+                        if step > FLAGS.batch_size and step % FLAGS.training_interval == 0:
+                            for i in range(scene.bs_num):
+                                sample_index = fov_agents.learn(i, sample_index)
+                observation = observation_
+                step += 1  # 总步数
+            avg_r = T_old / detect_times
+            if (avg_r >= best_avg_r):
+                best_avg_r = avg_r
+                if (episode > 200):
+                    fov_agents.save_model(head)
+            info = 'Cha:%d BS:%d, UE:%d, Antenna:%d,Unit:%d, p:%f,Epoch[%d|%d] r:%f best_r:%f' % (
                 character, bs_num, ue_num, antenna_num, unit_num, fov_agents.epsilons[character], episode,
                 total_episode, avg_r, best_avg_r)
-                tqdm_loader.set_description_str(info)
-                # ax.append(episode)
-                # ay.append(avg_r)
-                # plt.clf()
-                # plt.plot(ax, ay)
-                # plt.pause(0.1)
-                if (concern_all == False):
-                    result.append(np.maximum(T_old / detect_times - 25, -50))
-                else:
-                    result.append(T_old / detect_times)
+            tqdm_loader.set_description_str(info)
+            # ax.append(episode)
+            # ay.append(avg_r)
+            # plt.clf()
+            # plt.plot(ax, ay)
+            # plt.pause(0.1)
+            if (concern_all == False):
+                result.append(np.maximum(T_old / detect_times - 25, -50))
+            else:
+                result.append(T_old / detect_times)
 
 
 
