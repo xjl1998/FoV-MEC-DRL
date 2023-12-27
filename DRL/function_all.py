@@ -19,14 +19,8 @@ import numba as nb
 from numba.pycc import CC
 cc = CC('yin')
 from config import  FLAGS
-# FOV的分辨率
-#2d的FOV数据大小
 FOV_2D = 2*FLAGS.fOV_2DShape[0]*FLAGS.fOV_2DShape[1]
-#3d的FOV数据大小
 FOV_3D = (4/3)*FOV_2D
-
-
-#CPU的处理频率
 # F_VR = 3 * 10**9
 # F_MEC = 10 * 10**9
 #
@@ -111,9 +105,7 @@ def gen_epsilon_rule_larggest(epsilon,storage_limit_mec):
             new_epsilon[max_index,fov]=1
     return  new_epsilon
     # print("gen_epsilon_rule_larggest")
-'''
-每次优先往空余最大的位置放置 V2
-'''
+
 def gen_epsilon_rule_larggest2(epsilon,storage_limit_mec,BW, G2, omegas, N_0):
     bs_num = epsilon.shape[0]
     fov_num = epsilon.shape[1]
@@ -161,9 +153,7 @@ def gen_epsilon_rule_larggest2(epsilon,storage_limit_mec,BW, G2, omegas, N_0):
     # print("gen_epsilon_rule_larggest")
 
 from numba import jit
-'''
-每次优先往空余最小的位置放置 V2
-'''
+
 def gen_epsilon_rule_smallest2(epsilon,storage_limit_mec,BW, G2, omegas, N_0):
     bs_num = epsilon.shape[0]
     fov_num = epsilon.shape[1]
@@ -213,9 +203,6 @@ def gen_epsilon_rule_smallest2(epsilon,storage_limit_mec,BW, G2, omegas, N_0):
 
 
 from joblib import Parallel, delayed
-'''
-穷举法找到当前最优
-'''
 @cc.export('gen_epsilon_rule_exhaustion', nb.int32(nb.int32[:]))
 def gen_epsilon_rule_exhaustion(epsilon,storage_limit_mec,BW, G2, omegas, N_0, fov_sizes,Kb,Ub,ub,cr,total_computing_resources,mec_p_max):
     bs_num = epsilon.shape[0]
@@ -325,9 +312,6 @@ def gen_epsilon_rule_exhaustion(epsilon,storage_limit_mec,BW, G2, omegas, N_0, f
                                                 #     min_S = var_total_powers
     return  avaliable_epsilons
 
-'''
-每次优先往空余最小的位置放置
-'''
 def gen_epsilon_rule_smallest(epsilon,storage_limit_mec):
     # bs_num = epsilon.shape[0]
     fov_num = epsilon.shape[1]
@@ -449,27 +433,6 @@ def all_G_gain_cal_MISO(time,bs_num, ue_num,antenna_num,irs_coord,ue_coord,bs_co
 
 
 
-
-# def all_G_gain_cal_MISO_splitI(time,bs_num, ue_num,antenna_num,irs_coord,ue_coord,bs_coord,reflect,irs_units_num):
-#     # channel_space=np.array(channel_space).reshape(cuenum+chnum,chnum)
-#     G2 = np.zeros([bs_num, ue_num,antenna_num],dtype=np.complex)
-#     G = []
-#     for ue in range(ue_num):
-#         for bs in range(bs_num):
-#                 for antenna in range(antenna_num):
-#                     h_cue_bs = h_gain_cal(ue_coord[time,ue,:], bs_coord[bs], FLAGS.gfu_bs_a, "Rayleigh", irs_units_num)
-#                     h_cue_irs = h_gain_cal(ue_coord[time,ue,:], irs_coord, FLAGS.ue_irs_a, "Racian", irs_units_num)
-#                     h_irs_bs = h_gain_cal(irs_coord, bs_coord[bs], FLAGS.irs_bs_a, "Racian", irs_units_num)
-#
-#                     if irs_units_num != 0:
-#                         G2[bs, ue, antenna] = G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0][0]
-#                         G.append(G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0][0].real)
-#                         G.append(G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0][0].imag)
-#                     else:
-#                         G2[bs, ue, antenna] = G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0]
-#                         G.append(G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0].real)
-#                         G.append(G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0].imag)
-#     return G,G2
 def all_G_gain_cal_MISO_splitI(time,bs_num, ue_num,antenna_num,irs_coord,ue_coord,bs_coord,reflect,irs_units_num):
     # channel_space=np.array(channel_space).reshape(cuenum+chnum,chnum)
     G2 = np.zeros([bs_num, ue_num,antenna_num,1],dtype=np.complex)
@@ -507,8 +470,6 @@ def generate_bsfov_table(epsilon):
                 bss.append(bs)
         bsfov_table.append(bss)
     return bsfov_table
-
-
 
 def cal_sinr(G,omegas,current_fov,epsilon,N0):
     sum_up=0
@@ -638,9 +599,6 @@ def cal_rendered_computing_resources(rendered_fov_size,Kb,Ub,ub):
     return rs
 
 
-'''
-计算beamforming中的omega
-'''
 def omega_cal(h):
     omega = np.zeros_like(h).astype(dtype=np.complex)
 
@@ -654,8 +612,6 @@ def calculate_reward(caching_matrix):
     else:
         reward = -500
     return  reward
-
-
 
 def dist_calc_x(user_state,x,dist,angle,angle_fix,x_min,x_max,max_speed):
         '''
@@ -729,30 +685,6 @@ def all_G_gain_cal(bs_num, irs_coord,ue_num,coord_a,coord_b,reflect,irs_m):
                 count +=1
     return G
 
-    # for c in range(cuenum):
-    #     if channel_space[c] != 0:
-    #         which_bs = int(channel_space[c] / chnum)
-    #         which_ch = channel_space[c] % chnum
-    #         h_cue_bs = h_gain_cal(coord_a[c], coord_b[which_bs], gfu_bs_a, "Rayleigh", irs_m)
-    #         h_cue_irs = h_gain_cal(coord_a[c], irs_coord, ue_irs_a, "Racian", irs_m)
-    #         h_irs_bs = h_gain_cal(irs_coord, coord_b[which_bs], irs_bs_a, "Racian", irs_m)
-    #         if irs_m != 0:
-    #             G[c] = G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0][0]
-    #         else:
-    #             G[c] = G_gain_cal(h_cue_bs, h_irs_bs, h_cue_irs, reflect)[0]
-    #     else:
-    #         G[c] = 0
-    # return G
-def sic_decode_judge(cuenum, channel_num, G):
-    '''
-    判断解码顺序是否满足条件
-    '''
-    for i in range(channel_num):
-        for j in range(cuenum):
-            if pow(abs(G[cuenum+i][i]),2)>pow(abs(G[j][i]),2) and G[j][i]!=0:
-                return -1
-    return 1
-
 def r_min_judge(cue, ch_k, G, action_c_ch, action_c_p, r_min):
     for i in range(cue):
         if sum(action_c_p[i,:]) != 1:
@@ -771,37 +703,6 @@ def r_min_judge(cue, ch_k, G, action_c_ch, action_c_p, r_min):
             return -1, None
     return 1, r_arr
 
-
-
-
-
-
-
-
-    # for i in range(cue):
-    #     r_i=0
-    #     for j in range(ch_k):
-    #         for k in range(ch_k):
-    #             if G[cue+k,j]!=0:
-    #                 G_gbu_bs=G[cue+k,j]
-    #                 temp=cue+k
-    #                 break
-    #         i_gbu=action_c_p[temp,j]*pow(abs(G_gbu_bs),2)
-    #         i_gfu=0
-    #         for k in range(cue):
-    #             i_gfu=i_gfu+action_x[j][k][i]*pow(abs(G[k,j]),2)*action_c_p[k,j]
-    #         r_i_channel=BW*log2(1+(pow(abs(G[i,j]),2)*action_c_p[i,j]/(i_gfu+i_gbu+N_0)))
-    #         r_i=r_i+r_i_channel
-    #     r_arr.append(r_i)
-    # for i in range(ch_k):
-    #     for j in range(ch_k):
-    #         if i==j:
-    #             r_i=BW*log2(1+(pow(abs(G[cue+i,j]),2)*action_c_p[cue+i,j]/(N_0)))
-    #             r_arr.append(r_i)
-    # for i in range(cue):
-    #     if r_arr[i] < r_min:
-    #         return -1
-    # return 1
 def clean_G(G,cuenum,tau,channel_num):
     for i in range(cuenum):
         for j in range(channel_num):
@@ -817,45 +718,6 @@ def tau_judge_fun(G,channel_num,cuenum,tau):
         if sum(G[cue,:])==0:
             return -1
     return 1
-# def fun(cue, ch_k, r_arr, action_c_p):
-#     '''
-#     计算r
-#     '''
-#     t_relay = 0
-#     for i in range(cue):
-#         for j in range(ch_k):
-#             if action_c_p[i][j] != 0:
-#                 t_relay += C/(cr*r_arr[i])
-#     return t_relay
-#     # G_gbu_bs=0
-#     # G=np.array(G).reshape(cue+ch_k,ch_k)
-#     # action_c_p=np.array(action_c_p).reshape(cue+ch_k,ch_k)
-#     # temp=0
-#     # r=0
-#     # throughput=0
-#     # r_arr=[]
-#     # for i in range(cue):
-#     #     r_i=0
-#     #     for j in range(ch_k):
-#     #         for k in range(ch_k):
-#     #             if G[cue+k,j]!=0:
-#     #                 G_gbu_bs=G[cue+k,j]
-#     #                 temp=cue+k
-#     #                 break
-#     #         i_gbu=action_c_p[temp,j]*pow(abs(G_gbu_bs),2)
-#     #         i_gfu=0
-#     #         for k in range(cue):
-#     #             i_gfu=i_gfu+action_x[j][k][i]*pow(abs(G[k,j]),2)*action_c_p[k,j]
-#     #         r_i_channel=BW*log2(1+(pow(abs(G[i,j]),2)*action_c_p[i,j]/(i_gfu+i_gbu+N_0)))
-#     #         r_i=r_i+r_i_channel
-#     #     throughput=throughput+r_i
-#     #     r_arr.append(r_i)
-#     #     # r_i=r_i-r_min
-#     #     r=r+r_i
-#     # # print(throughput,r)
-#     # # print("fun_r_arr",r_arr)
-#     # return throughput,r,r_arr
-
 def render_time(loc):
     time = 0
     if loc == 0:
@@ -864,8 +726,6 @@ def render_time(loc):
         time = (FOV_2D*FLAGS.f_mec)/(FLAGS.F_mec)
     #时间单位换算成毫秒
     return time*10**3
-
-
 
 def qos_judge(G, r_min, cuenum, channel_num, action_c_ch, action_c_p):
     r_min_judge_va, r_arr = r_min_judge(cuenum,channel_num,G,action_c_ch,action_c_p,r_min)
@@ -916,44 +776,6 @@ def x_generate(G,ch_k,cue):
                     action_x_ch[j][k] = 0
         action_x.append(action_x_ch)
     return action_x
-def plot_mode_irs_compare(number,ave_throughput_arr1,throughput_arr1,in_ave_throughput_arr1,stat_lst):
-    plt.figure()
-    for stat in range(len(stat_lst)):
-        in_ave_throughput_arr = in_ave_throughput_arr1[stat]
-        if stat==0:
-            plt.plot(np.arange(0,len(in_ave_throughput_arr),9), in_ave_throughput_arr[::9],c='#00CED1' ,marker='*',alpha=0.4, label='C=3')#np.arange函数返回一个有终点和起点的固定步长的排列
-        if stat==1:
-            plt.plot(np.arange(0,len(in_ave_throughput_arr),9), in_ave_throughput_arr[::9],c='#9932CC', marker='<',alpha=0.4, label='C=2')#np.arange函数返回一个有终点和起点的固定步长的排列
-        if stat==2:
-            plt.plot(np.arange(0,len(in_ave_throughput_arr),9), in_ave_throughput_arr[::9],c='g', marker='>',alpha=0.4, label='C=1')
-        if stat==3:
-            plt.plot(np.arange(0,len(in_ave_throughput_arr),9), in_ave_throughput_arr[::9],c='#DC143C', marker='o',alpha=0.4, label='NO_IRS')
-    plt.grid(linestyle='-.')
-    plt.ylabel('interval_ave_Throughput')
-    plt.xlabel('Steps')
-    dir_path=dirname(abspath(__file__))
-    plt.legend(loc = 'best')
-    plt.savefig(dir_path + '/convergence.pdf')#, dpi=300)
-    plt.show()
-    plt.figure()
-    for stat in range(len(stat_lst)):
-        ave_throughput_arr = ave_throughput_arr1[stat]
-        if stat==0:
-            plt.plot(np.arange(10000,len(ave_throughput_arr),9999), ave_throughput_arr[10000:210000:9999],c='#00CED1' ,marker='*',alpha=0.4, label='C=3')#np.arange函数返回一个有终点和起点的固定步长的排列
-        if stat==1:
-            plt.plot(np.arange(10000,len(ave_throughput_arr),9999), ave_throughput_arr[10000:210000:9999],c='#9932CC', marker='<',alpha=0.4, label='C=2')#np.arange函数返回一个有终点和起点的固定步长的排列
-        if stat==2:
-            plt.plot(np.arange(10000,len(ave_throughput_arr),9999), ave_throughput_arr[10000:210000:9999],c='g', marker='>',alpha=0.4, label='C=1')
-        if stat==3:
-            plt.plot(np.arange(10000,len(ave_throughput_arr),9999), ave_throughput_arr[10000:210000:9999],c='#DC143C', marker='o',alpha=0.4, label='NO_IRS')
-    plt.grid(linestyle='-.')
-    plt.ylabel('Ave_Throughput')
-    plt.xlabel('Steps')
-    dir_path=dirname(abspath(__file__))
-    plt.legend(loc = 'best')
-    plt.savefig(dir_path + '/convergence1.pdf')#, dpi=300)
-    plt.show()
-    plt.close()
 def npyload(filename):
     """
     :功能：读取npy文件
@@ -992,55 +814,6 @@ def excel_save(excel,irs_m,stat):
             ws.cell(row=i,column=j+1).value=a[0][j]
         i+=1
     wb.save('data'+stat+'.xlsx')
-# if __name__ == "__main__":
-# channel_space_generate(2,3,2,2)
-# p_space_generate(2,3,2,2,2)
-#     reflect_space_generate(2,2)
-#     sic_order_calculate([1,1,0],3, 2,  [[3,3,0],[5,5,0],[7,7,0],[4,3,0],[2,2,0]], [0,0,0],  [[1,1],[0,1],[1,0],[0,1],[1,0]],  [[6.28318531,0], [0,6.28318531]],2)
-#     x_generate([[1,1.1], [2.1,0], [0,0.1], [0,0.1], [1,0]],2,3)
-#     fun(3,2,[[1,1.1],
-#              [2.1,0],
-#              [0,0.1],
-#              [0,0.1],
-#              [1,0]],
-#         [[[1,1],[1,1],[1,0],[1,0],[1,1]],[[0,0],[1,0],[1,0],[1,0],[0,0]],[[0,1],[0,1],[0,1],[0,1],[0,1]],
-#                [[0,1],[0,1],[0,1],[0,1],[0,1]],[[1,0],[1,0],[1,0],[1,0],[1,0]]],[[1,1],
-#                                                                                  [1,0],
-#                                                                                  [0,1],
-#                                                                                  [0,1],
-#
-#                                                                                  [1,0]])
-def ch_max_cue_judge(action_c_p,cuenum,ch_k,gfu_max):
-    judge=0
-    # print("p_max",p_max)
-    for i in range(ch_k):
-        count = 0
-        for j in range(cuenum):
-            if action_c_p[j][i]!=0:
-                count+=1
-        if count>gfu_max:
-            judge=1
-            break
-    if judge ==1:
-        return -1
-    else:
-        return 1
-def cue_max_ch_judge(action_c_p,cuenum,ch_k,ch_max):
-    judge=0
-    # print("p_max",p_max)
-    for i in range(cuenum):
-        count = 0
-        for j in range(ch_k):
-            if action_c_p[i][j]!=0:
-                count+=1
-        if count>ch_max:
-            judge=1
-            break
-    if judge ==1:
-        return -1
-    else:
-        return 1
-
 
 def average_power(ue,bs, ch, ch_space, p_max):
     power_result = np.zeros(ue)
@@ -1074,7 +847,6 @@ def gen_epsilon(bs_num,fov_patch_num):
             epsilon[bs][begin_index]=1
             if(begin_index+1<fov_patch_num):
                 begin_index=begin_index+1
-    print("初始化了一个符合条件的epsilon")
     return epsilon
 def gen_epsilon_V2(bs_num,fov_patch_num):
     avg_count=int(fov_patch_num /bs_num)
@@ -1088,7 +860,6 @@ def gen_epsilon_V2(bs_num,fov_patch_num):
             epsilon[bs][begin_index]=1
             if(begin_index+1<fov_patch_num):
                 begin_index=begin_index+1
-    print("初始化了一个符合条件的epsilon")
     return epsilon
 def change_epsilon_by_actions(epsilon,actions,bs_num,fov_patch_num):
     for bs in range(bs_num):

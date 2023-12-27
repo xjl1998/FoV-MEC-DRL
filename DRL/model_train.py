@@ -2639,7 +2639,7 @@ if __name__ == "__main__":
     #     for antenna in antenna_arr:
     #         for unit in unit_arr:
     #             record_H(10, 3, 10, 40,2000)
-    #训练
+
     # ue_arr = [8,6]
     # antenna_arr = [16]
     # unit_arr = [80]
@@ -2709,20 +2709,20 @@ if __name__ == "__main__":
     #                                       ["default", "min", "max", "default", "min", "max"], 'Number of time slots',
     #                                       'Average transmit power (dBm)', 251, 50, 10,
     #                                       [False, True, False, False, False])
-    plot_simulation_results_AO_algorithm("Iterations", 'Average trasnmit power(dBm)',
-                                         ['AO', 'AO-random-passive', 'AO-random-active'], disp_gap=1)
-    plot_simulation_results_bs_power_rule([6, 6, 6,6, 8, 8, 8,8], [3, 3, 3,3,3, 3, 3, 3], [80, 80,80,80, 80, 80, 80, 80],
-                                          [16,16, 16, 16, 16, 16,16,16], [40, 40, 40, 40, 40, 40,40,40], [],
-                                          ["default", "min", "max",'exhaustion', "default", "min", "max",'exhaustion'], 'Number of time slots',
-                                          'Average transmit power (dBm)', 301, 50, 20,
-                                          [False, True, False, False, False])
-    plot_simulation_results_total_power([6, 6, 6, 6,8, 8, 8, 8], [ 3, 3,3,3,3, 3,3,3], [ 80, 80,80,80,80, 80,80,80],
-                                        [ 16, 16,16,16, 16, 16,16,16], [ 40, 40,40,40,40, 40,40,40],
-                                        [],
-                                        [ "default", "min", "max",'exhaustion', "default", "min", "max",'exhaustion'],
-                                        [ True, True,True, True,True, True,True, True], 'Number of time slots',
-                                        'Average total weighted power(dBm)', 301, 50, 20, [6, 8], [5, 5],
-                                        [False, True, False, False, False])
+    # plot_simulation_results_AO_algorithm("Iterations", 'Average trasnmit power(dBm)',
+    #                                      ['AO', 'AO-random-passive', 'AO-random-active'], disp_gap=1)
+    # plot_simulation_results_bs_power_rule([6, 6, 6,6, 8, 8, 8,8], [3, 3, 3,3,3, 3, 3, 3], [80, 80,80,80, 80, 80, 80, 80],
+    #                                       [16,16, 16, 16, 16, 16,16,16], [40, 40, 40, 40, 40, 40,40,40], [],
+    #                                       ["default", "min", "max",'exhaustion', "default", "min", "max",'exhaustion'], 'Number of time slots',
+    #                                       'Average transmit power (dBm)', 301, 50, 20,
+    #                                       [False, True, False, False, False])
+    # plot_simulation_results_total_power([6, 6, 6, 6,8, 8, 8, 8], [ 3, 3,3,3,3, 3,3,3], [ 80, 80,80,80,80, 80,80,80],
+    #                                     [ 16, 16,16,16, 16, 16,16,16], [ 40, 40,40,40,40, 40,40,40],
+    #                                     [],
+    #                                     [ "default", "min", "max",'exhaustion', "default", "min", "max",'exhaustion'],
+    #                                     [ True, True,True, True,True, True,True, True], 'Number of time slots',
+    #                                     'Average total weighted power(dBm)', 301, 50, 20, [6, 8], [5, 5],
+    #                                     [False, True, False, False, False])
 
     # plot_simulation_results_ue_rates([8,8,8,8], [3,3,3,3], [30,30,30,30],
     #                                  ["default","default","default","default","default","default"],[True,False,True,False,True,False],[5,5,5,5],
